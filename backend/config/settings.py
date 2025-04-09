@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     "rest_framework",
     'rest_framework.authtoken',
+    'rest_framework_simplejwt',  # JWT 인증을 위한 simplejwt 추가
     "django_extensions",
     "testsuite",
     "accounts",
@@ -131,10 +132,21 @@ CORS_ALLOW_ALL_ORIGINS = True  # 개발용 설정
 # config/settings.py
 AUTH_USER_MODEL = 'accounts.User'
 
+# JWT 인증 설정
+from datetime import timedelta
+
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # 액세스 토큰 만료 시간
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # 리프레시 토큰 만료 시간
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': False,
+    'UPDATE_LAST_LOGIN': False,
 }
 
 

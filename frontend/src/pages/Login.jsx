@@ -1,16 +1,19 @@
-// src/pages/Login.jsx
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import Container from "../components/ui/Container";
 import Input from "../components/ui/Input";
 import Button from "../components/ui/Button";
+import Spinner from "../components/ui/Spinner"; // ✅ 추가
 
 export default function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [loading, setLoading] = useState(false); // ✅ 로딩 상태 추가
+    const [error, setError] = useState("");
     const navigate = useNavigate();
 
+// Login.jsx - 로그인 성공 시
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -19,19 +22,22 @@ export default function Login() {
                 password,
             });
             localStorage.setItem("token", res.data.access);
-            navigate("/dashboard");
+            navigate("/dashboard"); // ✅ 여기에서 대시보드로 이동시킴
         } catch (err) {
-            console.log(err);
-            alert("❌ 로그인 실패: 아이디 또는 비밀번호를 확인하세요.");
+            alert("로그인 실패");
         }
     };
 
+
     return (
         <Container>
-            <div className="w-full bg-white dark:bg-neutral-800 p-8 sm:p-10 rounded-2xl shadow-lg border border-neutral-700">
-                <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-neutral-900 dark:text-white">
-                    TestHub
-                </h2>
+            <div className="bg-zinc-900 text-white p-8 rounded-xl shadow-md w-full">
+                <h2 className="text-2xl font-bold mb-6 text-center">로그인</h2>
+
+                {error && (
+                    <div className="mb-4 text-sm text-red-400 text-center">{error}</div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <Input
                         type="text"
@@ -45,13 +51,14 @@ export default function Login() {
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <Button type="submit" className="w-full">
-                        로그인
+                    <Button type="submit" className="w-full" disabled={loading}>
+                        {loading ? "로그인 중..." : "로그인"}
                     </Button>
                 </form>
-                <p className="text-sm text-center mt-4 text-gray-400 dark:text-gray-300">
+
+                <p className="text-sm text-center mt-4">
                     계정이 없으신가요?{" "}
-                    <Link to="/register" className="text-primary hover:underline">
+                    <Link to="/register" className="text-blue-500">
                         회원가입
                     </Link>
                 </p>

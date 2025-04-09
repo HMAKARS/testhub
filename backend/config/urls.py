@@ -20,6 +20,6 @@ from django.urls import path,include
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/", include("testsuite.urls")),
-    path("auth/", include("djoser.urls")),
-    path("auth/", include("djoser.urls.authtoken")),  # 토큰 기반 로그인
+    path('auth/', include('djoser.urls')),  # 로그인, 회원가입 등의 기능을 위한 기본 URL 설정
+    path('auth/', include('djoser.urls.jwt')),  # JWT 인증을 위한 URL 설정
 ]

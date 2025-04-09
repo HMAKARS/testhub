@@ -34,8 +34,12 @@ export default function Register() {
             alert("✅ 회원가입 성공! 로그인 해주세요.");
             navigate("/login");
         } catch (err) {
-            console.log(err)
-            alert("❌ 회원가입 실패: 이미 존재하는 사용자이거나 서버 오류입니다.");
+            const errors = err.response.data;
+            if (errors.username) {
+                alert("이미 사용 중인 아이디입니다.");
+            } else {
+                alert("회원가입 실패");
+            }
         }
     };
 
