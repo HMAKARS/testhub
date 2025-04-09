@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_extensions",
     "testsuite",
+    "accounts",
+    "corsheaders",
 ]
 
 MIDDLEWARE = [
@@ -129,7 +131,10 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-INSTALLED_APPS += ["corsheaders"]
 MIDDLEWARE.insert(0, "corsheaders.middleware.CorsMiddleware")
 
 CORS_ALLOW_ALL_ORIGINS = True  # 개발용 설정
+
+# config/settings.py
+AUTH_USER_MODEL = 'accounts.User'
+

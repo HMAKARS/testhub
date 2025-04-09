@@ -1,116 +1,69 @@
+// src/components/ScenarioForm.jsx
 import { useState } from "react";
+import axios from "axios";
+import Input from "./ui/Input";
+import Button from "./ui/Button";
 
 export default function ScenarioForm({ onRegistered }) {
-    const [form, setForm] = useState({
-        name: "",
-        platform: "web",
-        action: "click",
-        target: "",
-        assertionType: "text_present",
-        assertionValue: "",
-    });
+    const [name, setName] = useState("");
+    const [url, setUrl] = useState("");
+    const [method, setMethod] = useState("GET");
+    const token = localStorage.getItem("token");
 
-    const handleChange = (e) => {
-        const { name, value } = e.target;
-        setForm(prev => ({ ...prev, [name]: value }));
-    };
-
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
-        const scenarioData = {
-            name: form.name,
-            platform: form.platform,
-            action: form.action,
-            target: form.target,
-            assertion: {
-                type: form.assertionType,
-                value: form.assertionValue
-            }
-        };
-
-        console.log("등록된 시나리오:", scenarioData);
-        alert("시나리오가 등록되었습니다. (백엔드 연동 전)");
-        setForm({
-            name: "",
-            platform: "web",
-            action: "click",
-            target: "",
-            assertionType: "text_present",
-            assertionValue: "",
-        });
-
-        if (onRegistered) onRegistered(); // 목록 새로고침
+        try {
+            await axios.post(
+                "http://localhost:8000/api/apitests/",
+                { name, url, method },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+            setName("");
+            setUrl("");
+            setMethod("GET");
+            if (onRegistered) onRegistered();
+        } catch (err) {
+            alert("❌ 시나리오 등록 실패");
+        }
     };
 
     return (
-        <form onSubmit={handleSubmit} className="bg-white border shadow p-4 rounded space-y-3 mb-8">
-            <h2 className="text-lg font-semibold">📝 테스트 시나리오 등록</h2>
-
-            <input
-                type="text"
-                name="name"
-                value={form.name}
-                onChange={handleChange}
-                placeholder="시나리오 이름"
-                className="w-full border p-2 rounded"
-            />
-
-            <select
-                name="platform"
-                value={form.platform}
-                onChange={handleChange}
-                className="w-full border p-2 rounded"
-            >
-                <option value="web">🌐 Web</option>
-                <option value="mobile">📱 Mobile</option>
-                <option value="desktop">💻 Desktop</option>
-            </select>
-
-            <input
-                type="text"
-                name="action"
-                value={form.action}
-                onChange={handleChange}
-                placeholder="액션 (예: click, input 등)"
-                className="w-full border p-2 rounded"
-            />
-
-            <input
-                type="text"
-                name="target"
-                value={form.target}
-                onChange={handleChange}
-                placeholder="대상 선택자 (예: #login-button)"
-                className="w-full border p-2 rounded"
-            />
-
-            <div className="flex gap-2">
-                <select
-                    name="assertionType"
-                    value={form.assertionType}
-                    onChange={handleChange}
-                    className="w-1/2 border p-2 rounded"
-                >
-                    <option value="text_present">텍스트 포함</option>
-                    <option value="element_visible">요소 존재</option>
-                </select>
-                <input
+        <div className="bg-white dark:bg-neutral-800 p-6 rounded-xl shadow-md border border-neutral-700">
+            <h2 className="text-xl font-bold mb-4 text-neutral-900 dark:text-white">
+                ➕ 테스트 시나리오 등록
+            </h2>
+            <form onSubmit={handleSubmit} className="space-y-4">
+                <Input
                     type="text"
-                    name="assertionValue"
-                    value={form.assertionValue}
-                    onChange={handleChange}
-                    placeholder="검증 값 (예: 출력 완료)"
-                    className="w-1/2 border p-2 rounded"
+                    placeholder="시나리오 이름"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
                 />
-            </div>
-
-            <button
-                type="submit"
-                className="bg-blue-600 text-white w-full py-2 rounded hover:bg-blue-700 transition"
-            >
-                등록하기
-            </button>
-        </form>
+                <Input
+                    type="text"
+                    placeholder="요청 URL"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                />
+                <div>
+                    <label className="text-sm text-gray-700 dark:text-gray-300 block mb-1">
+                        요청 메서드
+                    </label>
+                    <select
+                        value={method}
+                        onChange={(e) => setMethod(e.target.value)}
+                        className="w-full px-4 py-2 rounded border bg-white dark:bg-neutral-700 dark:text-white"
+                    >
+                        <option value="GET">GET</option>
+                        <option value="POST">POST</option>
+                        <option value="PUT">PUT</option>
+                        <option value="DELETE">DELETE</option>
+                    </select>
+                </div>
+                <Button type="submit" className="w-full">
+                    등록하기
+                </Button>
+            </form>
+        </div>
     );
 }

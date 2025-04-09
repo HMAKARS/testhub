@@ -1,57 +1,60 @@
 // src/pages/Login.jsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Container from "../components/ui/Container";
+import Input from "../components/ui/Input";
+import Button from "../components/ui/Button";
 
 export default function Login() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            // 실제 백엔드 API는 추후 연동
-            // 임시로 토큰 저장 후 대시보드 이동
-            localStorage.setItem("token", "mock_token");
+            const res = await axios.post("http://localhost:8000/auth/jwt/create/", {
+                username,
+                password,
+            });
+            localStorage.setItem("token", res.data.access);
             navigate("/dashboard");
         } catch (err) {
-            alert("로그인 실패");
+            alert("❌ 로그인 실패: 아이디 또는 비밀번호를 확인하세요.");
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-            <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl">
-                <h1 className="text-2xl font-bold text-center mb-6">로그인</h1>
-                <form onSubmit={handleLogin} className="space-y-4">
-                    <input
-                        className="w-full border p-3 rounded-lg text-sm"
+        <Container>
+            <div className="w-full bg-white dark:bg-neutral-800 p-8 sm:p-10 rounded-2xl shadow-lg border border-neutral-700">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-neutral-900 dark:text-white">
+                    TestHub
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Input
                         type="text"
                         placeholder="아이디"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
-                    <input
-                        className="w-full border p-3 rounded-lg text-sm"
+                    <Input
                         type="password"
                         placeholder="비밀번호"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-                    >
+                    <Button type="submit" className="w-full">
                         로그인
-                    </button>
+                    </Button>
                 </form>
-                <p className="text-center text-sm text-gray-500 mt-4">
-                    아직 계정이 없으신가요?{" "}
-                    <a href="/register" className="text-blue-600 underline">
+                <p className="text-sm text-center mt-4 text-gray-400 dark:text-gray-300">
+                    계정이 없으신가요?{" "}
+                    <Link to="/register" className="text-primary hover:underline">
                         회원가입
-                    </a>
+                    </Link>
                 </p>
             </div>
-        </div>
+        </Container>
     );
 }

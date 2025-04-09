@@ -1,6 +1,10 @@
 // src/pages/Register.jsx
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import Container from "../components/ui/Container";
+import Input from "../components/ui/Input";
+import Button from "../components/ui/Button";
 
 export default function Register() {
     const [username, setUsername] = useState("");
@@ -8,63 +12,62 @@ export default function Register() {
     const [rePassword, setRePassword] = useState("");
     const navigate = useNavigate();
 
-    const handleRegister = async (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-
         if (password !== rePassword) {
-            alert("비밀번호가 일치하지 않습니다.");
+            alert("❌ 비밀번호가 일치하지 않습니다.");
             return;
         }
 
         try {
-            // 실제 API 요청은 나중에 추가 예정
-            alert("회원가입 완료! 로그인 페이지로 이동합니다.");
+            await axios.post("http://localhost:8000/auth/users/", {
+                username,
+                password,
+                re_password: rePassword,
+            });
+            alert("✅ 회원가입 성공! 로그인 해주세요.");
             navigate("/login");
         } catch (err) {
-            alert("회원가입 실패");
+            alert("❌ 회원가입 실패: 이미 존재하는 사용자이거나 서버 오류입니다.");
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-            <div className="max-w-md w-full bg-white p-8 rounded-2xl shadow-xl">
-                <h1 className="text-2xl font-bold text-center mb-6">회원가입</h1>
-                <form onSubmit={handleRegister} className="space-y-4">
-                    <input
-                        className="w-full border p-3 rounded-lg text-sm"
+        <Container>
+            <div className="w-full bg-white dark:bg-neutral-800 p-8 sm:p-10 rounded-2xl shadow-lg border border-neutral-700">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 text-center text-neutral-900 dark:text-white">
+                    회원가입
+                </h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <Input
                         type="text"
                         placeholder="아이디"
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
-                    <input
-                        className="w-full border p-3 rounded-lg text-sm"
+                    <Input
                         type="password"
                         placeholder="비밀번호"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                     />
-                    <input
-                        className="w-full border p-3 rounded-lg text-sm"
+                    <Input
                         type="password"
                         placeholder="비밀번호 확인"
                         value={rePassword}
                         onChange={(e) => setRePassword(e.target.value)}
                     />
-                    <button
-                        type="submit"
-                        className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition"
-                    >
+                    <Button type="submit" className="w-full">
                         회원가입
-                    </button>
+                    </Button>
                 </form>
-                <p className="text-center text-sm text-gray-500 mt-4">
+                <p className="text-sm text-center mt-4 text-gray-400 dark:text-gray-300">
                     이미 계정이 있으신가요?{" "}
-                    <a href="/login" className="text-blue-600 underline">
+                    <Link to="/login" className="text-primary hover:underline">
                         로그인
-                    </a>
+                    </Link>
                 </p>
             </div>
-        </div>
+        </Container>
     );
 }

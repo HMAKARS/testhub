@@ -5,7 +5,17 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['"Apple SD Gothic Neo"', 'system-ui', 'sans-serif'],
+      },
+      colors: {
+        primary: '#1e3a8a',
+        secondary: '#f9fafb',
+      },
+    },
   },
+
+
   plugins: [],
 }
