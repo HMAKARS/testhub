@@ -21,6 +21,7 @@ export default function Login() {
             localStorage.setItem("token", res.data.access);
             navigate("/dashboard");
         } catch (err) {
+            console.log(err);
             alert("❌ 로그인 실패: 아이디 또는 비밀번호를 확인하세요.");
         }
     };

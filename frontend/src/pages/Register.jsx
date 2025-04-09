@@ -11,11 +11,16 @@ export default function Register() {
     const [password, setPassword] = useState("");
     const [rePassword, setRePassword] = useState("");
     const navigate = useNavigate();
+    const [role, setRole] = useState("tester");
+
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (password !== rePassword) {
             alert("❌ 비밀번호가 일치하지 않습니다.");
+            return;
+        }else if(password.length < 8){
+            alert("❌ 비밀번호가는 8자리 이상 입력해주시기 바랍니다.");
             return;
         }
 
@@ -24,10 +29,12 @@ export default function Register() {
                 username,
                 password,
                 re_password: rePassword,
+                role,
             });
             alert("✅ 회원가입 성공! 로그인 해주세요.");
             navigate("/login");
         } catch (err) {
+            console.log(err)
             alert("❌ 회원가입 실패: 이미 존재하는 사용자이거나 서버 오류입니다.");
         }
     };
@@ -45,6 +52,18 @@ export default function Register() {
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
                     />
+                    <div>
+                        <select
+                            id="role"
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-sm rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="tester">테스터</option>
+                            <option value="admin">관리자</option>
+                        </select>
+                    </div>
+
                     <Input
                         type="password"
                         placeholder="비밀번호"
