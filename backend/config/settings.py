@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 from decouple import config
 
 SECRET_KEY = config("SECRET_KEY")
@@ -43,6 +44,7 @@ INSTALLED_APPS = [
     "accounts",
     "corsheaders",
     "djoser",
+    "e2e"
 ]
 
 MIDDLEWARE = [
@@ -159,4 +161,13 @@ DJOSER = {
         'current_user': 'accounts.serializers.CustomUserSerializer',
     },
 }
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",  # ✅ 프론트엔드 개발 서버
+]
+
+OPENAI_API_KEY = config("OPENAI_API_KEY")
 

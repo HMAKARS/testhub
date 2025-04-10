@@ -1,6 +1,6 @@
 // src/components/ScenarioList.jsx
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 
 export default function ScenarioList() {
     const [scenarios, setScenarios] = useState([]);

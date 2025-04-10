@@ -42,13 +42,14 @@ class UiTestScenario(models.Model):
 # testsuite/models.py
 
 class UiTestResult(models.Model):
-    test_case = models.ForeignKey(
-        "UiTestCase", on_delete=models.CASCADE, related_name="results",
-        null=True, blank=True  # 이 부분 추가
+    scenario = models.ForeignKey(
+        "UiTestScenario", on_delete=models.CASCADE, related_name="results",
+        null=True, blank=True  # test_case 말고 scenario
     )
     is_success = models.BooleanField(default=False)
     status_code = models.IntegerField(null=True, blank=True)
     response_body = models.JSONField(null=True, blank=True)
+    message = models.TextField(null=True, blank=True)  # 메시지 필드 추가
     executed_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

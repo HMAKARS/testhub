@@ -7,6 +7,7 @@ import UiDashboard from "./pages/UiDashboard";
 import ApiDashboard from "./pages/ApiDashboard";
 import IntegrationDashboard from "./pages/IntegrationDashboard";
 import AppLayout from "./components/layout/AppLayout";
+import E2EUploader from "./pages/E2EUploader";
 
 function App() {
     const { isAuthenticated, isLoading } = useAuth();
@@ -32,6 +33,7 @@ function App() {
                     isLayoutHidden ? null : (
                         <AppLayout>
                             <Routes>
+                                <Route path="/dashboard/e2e" element={<E2EUploader />} />
                                 <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} />} />
                                 <Route path="/dashboard" element={isAuthenticated ? <Dashboard /> : <Navigate to="/login" />} />
                                 <Route path="/dashboard/ui" element={isAuthenticated ? <UiDashboard /> : <Navigate to="/login" />} />

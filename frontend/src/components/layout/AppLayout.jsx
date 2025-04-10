@@ -13,6 +13,7 @@ export default function AppLayout({ children }) {
         { path: "/dashboard/ui", label: "UI 테스트" },
         { path: "/dashboard/api", label: "API 테스트" },
         { path: "/dashboard/integration", label: "통합 테스트" },
+        { path: "/dashboard/e2e", label: "E2E 테스트" }, // 🔥 이거 추가
     ];
 
     const shouldShowMenu = pathname !== "/dashboard"; // 대시보드 메인에서는 메뉴 숨기기

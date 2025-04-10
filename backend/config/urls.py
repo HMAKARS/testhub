@@ -23,4 +23,5 @@ urlpatterns = [
     path("api/", include("testsuite.urls")),
     path('auth/', include('djoser.urls')),  # 로그인, 회원가입 등의 기능을 위한 기본 URL 설정
     path('auth/', include('djoser.urls.jwt')),  # JWT 인증을 위한 URL 설정
+    path("api/e2e/", include("e2e.urls")),
 ]

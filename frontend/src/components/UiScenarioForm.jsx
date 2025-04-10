@@ -1,5 +1,5 @@
 import { useState } from "react";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 
 export default function UiScenarioForm({ onRegistered }) {
     const [name, setName] = useState("");

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import { useAuth } from "../contexts/AuthContext";
 import Container from "../components/ui/Container";
 import Input from "../components/ui/Input";

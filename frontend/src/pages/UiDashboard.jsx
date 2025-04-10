@@ -1,6 +1,6 @@
 // src/pages/UiDashboard.jsx
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import UiScenarioForm from "../components/UiScenarioForm";
 import { Bar } from "react-chartjs-2";
 import {

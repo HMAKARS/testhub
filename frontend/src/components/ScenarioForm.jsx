@@ -1,6 +1,6 @@
 // src/components/ScenarioForm.jsx
 import { useState } from "react";
-import axios from "axios";
+import axios from "../utils/axiosInstance";
 import Input from "./ui/Input";
 import Button from "./ui/Button";
 
