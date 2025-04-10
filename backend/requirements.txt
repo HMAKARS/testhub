@@ -1,8 +1,21 @@
 asgiref==3.8.1
-Django==5.2
+certifi==2024.12.14
+charset-normalizer==3.4.1
+Django==5.1.2
 django-cors-headers==4.7.0
 django-extensions==4.0
 djangorestframework==3.16.0
+filelock==3.16.1
+fsspec==2024.12.0
+huggingface-hub==0.27.1
+idna==3.10
 mysqlclient==2.2.7
+packaging==24.2
 python-decouple==3.8
-sqlparse==0.5.3
+PyYAML==6.0.2
+requests==2.32.3
+sqlparse==0.5.1
+tqdm==4.67.1
+typing_extensions==4.12.2
+urllib3==2.3.0
+wheel @ file:///opt/homebrew/Cellar/python%403.13/3.13.2/libexec/wheel-0.45.1-py3-none-any.whl#sha256=b9235939e2096903717cb6bfc132267f8a7e46deb2ec3ef9c5e234ea301795d0
