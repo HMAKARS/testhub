@@ -5,9 +5,7 @@ import openai
 import os
 
 open_api_key = config("OPENAI_API_KEY")
-print(open_api_key)
-openai.api_key = open_api_key
-client = openai.OpenAI()
+client = openai.OpenAI(api_key=open_api_key)
 
 def analyze_project_with_ai(path: Path) -> dict:
     # 파일 목록 수집
