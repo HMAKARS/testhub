@@ -20,3 +20,38 @@ class ApiTestCase(models.Model):
 
     def __str__(self):
         return f"[{self.platform}] {self.name}"
+
+class UiTestCase(models.Model):
+    name = models.CharField(max_length=100)
+    url = models.URLField()
+    selector = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+class UiTestScenario(models.Model):
+    name = models.CharField(max_length=100)
+    url = models.URLField()
+    selector = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.name
+
+# testsuite/models.py
+
+class UiTestResult(models.Model):
+    test_case = models.ForeignKey(
+        "UiTestCase", on_delete=models.CASCADE, related_name="results",
+        null=True, blank=True  # 이 부분 추가
+    )
+    is_success = models.BooleanField(default=False)
+    status_code = models.IntegerField(null=True, blank=True)
+    response_body = models.JSONField(null=True, blank=True)
+    executed_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Result for {self.test_case.name if self.test_case else 'Unknown'} at {self.executed_at}"
+
+
