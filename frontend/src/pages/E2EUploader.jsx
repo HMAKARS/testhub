@@ -49,6 +49,7 @@ export default function E2EUploader() {
             });
 
             setAnalyzeResult(res.data);
+            console.log(res.data)
 
             setMessage("✅ 분석 완료");
 
