@@ -105,6 +105,13 @@ def execute_scenario(steps):
                 except Exception as e:
                     log.append(f"❌ assert_text 오류: {str(e)}")
                     success = False
+            elif action == "wait_for_redirect":
+                try:
+                    WebDriverWait(driver, 10).until(EC.url_contains(target))
+                    log += f"➡️ 리디렉션 감지됨: {target}\n"
+                except Exception as e:
+                    log += f"❌ 리디렉션 실패: {target} - {str(e)}\n"
+                    success = False
 
             else:
                 log.append(f"⚠️ 알 수 없는 동작: {action}")
@@ -114,15 +121,14 @@ def execute_scenario(steps):
         log.append(f"🚫 시스템 오류 발생: {str(e)}")
         success = False
     finally:
-        if not success:
-            try:
-                os.makedirs(SCREENSHOT_DIR, exist_ok=True)
-                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-                screenshot_path = os.path.join(SCREENSHOT_DIR, f"{timestamp}.png")
-                driver.save_screenshot(screenshot_path)
-                log.append(f"📸 스크린샷 저장됨: {screenshot_path}")
-            except Exception as e:
-                log.append(f"⚠️ 스크린샷 저장 실패: {str(e)}")
+        try:
+            os.makedirs(SCREENSHOT_DIR, exist_ok=True)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            screenshot_path = os.path.join(SCREENSHOT_DIR, f"{timestamp}.png")
+            driver.save_screenshot(screenshot_path)
+            log.append(f"📸 스크린샷 저장됨: {screenshot_path}")
+        except Exception as e:
+            log.append(f"⚠️ 스크린샷 저장 실패: {str(e)}")
 
         driver.quit()
 

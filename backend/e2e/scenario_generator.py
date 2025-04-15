@@ -1,36 +1,44 @@
 from pathlib import Path
 from .llm_utils import ask_scenario_llm
-from .models import E2ETestScenario  # 모델 import 추가
+from .models import E2ETestScenario
+from .html_constraints import extract_input_constraints
 import re
 import os
+import json
+
 
 def collect_code_snippets(path: Path, max_files: int = 20) -> str:
-    """코드 파일들에서 내용을 수집하고 정리"""
     extensions = [".py", ".js", ".ts", ".jsx", ".tsx", ".html"]
     files = [p for p in path.rglob("*") if p.suffix in extensions and p.is_file()]
-
     files = files[:max_files]
     snippets = []
-
     for file in files:
         try:
             content = file.read_text(encoding="utf-8")
             snippets.append(f"--- {file} ---\n{content[:3000]}\n")
         except Exception as e:
             print(f"⚠️ {file} 읽기 실패: {e}")
-
     return "\n".join(snippets)
 
-def normalize_asserts(scenarios: list) -> list:
+
+def normalize_asserts(scenarios: list, constraints: list) -> list:
+    selector_to_error = {}
+    for c in constraints:
+        if not c.get("selector"):
+            continue
+        label = c.get("label") or c.get("placeholder") or c.get("title") or c.get("name")
+        message = f"{label}은 필수 항목입니다." if c.get("required") else f"{label}의 입력값이 유효하지 않습니다."
+        selector_to_error[c["selector"]] = message
+
     for scenario in scenarios:
         for step in scenario.get("steps", []):
             if step.get("action") == "assert":
-                if not step.get("target") or step.get("target") in [".errorlist", ".errorlist li", "form ul li"]:
-                    step["action"] = "assert_text"
-                    if not step.get("value"):
-                        step["value"] = "필수 항목입니다"
-                    step.pop("target", None)
+                step["action"] = "assert_text"
+                selector = step.get("target")
+                step["value"] = selector_to_error.get(selector, "유효하지 않은 입력입니다.")
+                step.pop("target", None)
     return scenarios
+
 
 def normalize_radio_inputs(scenarios: list) -> list:
     for scenario in scenarios:
@@ -40,6 +48,7 @@ def normalize_radio_inputs(scenarios: list) -> list:
                 step.pop("value", None)
     return scenarios
 
+
 def patch_failed_steps(scenarios: list) -> list:
     for scenario in scenarios:
         for step in scenario.get("steps", []):
@@ -47,11 +56,8 @@ def patch_failed_steps(scenarios: list) -> list:
                 step["value"] = "필수 항목입니다"
     return scenarios
 
+
 def auto_repair_failed_log(scenarios: list, failure_log: str) -> list:
-    """
-    실패 로그를 기반으로 시나리오 step의 target 또는 value를 자동 보정
-    예: invalid element state → input → click 전환
-    """
     for scenario in scenarios:
         for step in scenario.get("steps", []):
             if "invalid element state" in failure_log:
@@ -64,51 +70,89 @@ def auto_repair_failed_log(scenarios: list, failure_log: str) -> list:
                     step["value"] = match.group(1)
     return scenarios
 
+
 def generate_test_scenarios(path: Path, failure_log: str = None, project_name: str = None) -> dict:
     source_code = collect_code_snippets(path)
 
-    prompt_prefix = """
+    constraint_files = [
+        f for f in path.rglob("*.html")
+        if "MACOSX" not in str(f) and not f.name.startswith("._")
+    ]
+    constraints = []
+    for html_file in constraint_files:
+        try:
+            constraints.extend(extract_input_constraints(html_file))
+        except UnicodeDecodeError as e:
+            print(f"⚠️ HTML 분석 실패: {html_file} - {e}")
+
+    prompt = f"""
 당신은 숙련된 QA 엔지니어입니다.
 
-아래는 웹 애플리케이션의 코드 요약입니다. 이 코드를 분석하여 사용자 관점에서 수행될 수 있는 E2E 테스트 시나리오 3~5개를 생성해 주세요.
+아래는 웹 애플리케이션의 코드 요약과 입력 필드의 유효성 조건(필수, 제약 조건 등) 목록입니다. 
+이 정보를 바탕으로 실제 사용자 관점에서 수행될 수 있는 E2E 테스트 시나리오를 JSON 배열 형식으로 생성해 주세요.
 
-각 시나리오는 반드시 다음과 같은 JSON 형식이어야 하며, 설명 없이 JSON만 출력하세요:
+### 주의 사항:
+- 숫자, 나이, 이메일 등 형식이 제한된 필드에 잘못된 값이 입력된 경우를 고려하세요.
+- form 제출 후 페이지 이동(redirect)이 있다면 `wait_for_redirect` 액션을 사용하세요.
+- form 제출 후 유효성 메시지나 결과가 뜨기까지 잠깐의 지연이 있을 수 있으므로,
+  `click` 후 반드시 `wait` 또는 `wait_for` 액션을 추가하세요. 
+- 버튼 클릭 후 UI가 반응하기까지 잠시 기다려야 한다면 `wait` 액션을 `click` 바로 다음에 추가하세요.
+- 가능한 경우 validator 또는 서버 측 검증 조건에 따른 assert도 작성하세요.
+- assert_text는 HTML 또는 라벨 기반 예상 메시지를 기반으로 작성하세요.
+- 메시지를 임의로 추측하지 말고, placeholder, title, label 등의 UI 텍스트를 바탕으로 유추하세요.
+- 로그인 후 대시보드 이동, 신청 후 thank-you 페이지 이동 등도 반드시 포함하세요.
+- 유효성 검사나 필수 항목 누락은 테스트할 필요 없으니 생성하지 말아주세요 
+- 제출 성공 테스트만 생성해주세요. 
+
+출력은 JSON 배열로만 구성하세요.
+
+각 시나리오는 다음과 같은 JSON 형식입니다:
 
 [
-  {
-    "name": "로그인 테스트",
+  {{
+    "name": "전화번호 10자리 제출 실패",
     "steps": [
-      { "action": "visit", "target": "/login" },
-      { "action": "input", "target": "#username", "value": "testuser" },
-      { "action": "input", "target": "#password", "value": "123456" },
-      { "action": "click", "target": "button[type=submit]" },
-      { "action": "assert_text", "value": "Welcome" }
+      {{ "action": "visit", "target": "/" }},
+      {{  "action": "click", "target": "input[type=radio][value='남성']" }},
+      {{  "action": "input", "target": "#id_age", "value": "30" }},
+      {{  "action": "input", "target": "#id_job_field", "value": "개발자" }},
+      {{  "action": "input", "target": "#id_name", "value": "홍길동" }},
+      {{  "action": "input", "target": "#id_phone", "value": "0101234567" }},
+      {{  "action": "click", "target": "input[type=checkbox][name='agree']" }},
+      {{  "action": "click", "target": "button[type=submit]" }},
+      {{  "action": "wait_for", "target": ".tooltip" }},
+      {{  "action": "assert_text", "target": ".tooltip", "value": "이 텍스트를 11자 이상으로 늘리세요" }}
     ]
-  },
-  ...
+  }}
 ]
+각 step에는 `action`, `target`, `value`가 포함될 수 있으며, 다음 액션 중 하나를 사용할 수 있습니다:
+- visit
+- input
+- click
+- wait
+- wait_for_redirect
+- assert
+- assert_text
 
-다음 조건을 반드시 지켜주세요:
-- 실제 사용자 흐름에 따라 입력 → 제출 → 검증 순서로 구성하세요.
-- 가능한 경우 `assert` 대신 `assert_text`를 사용해 텍스트 메시지를 확인하세요.
-- 오류 발생 시 "필수 항목입니다", "형식이 올바르지 않습니다" 같은 메시지를 assert_text로 검증하세요.
-- action은 visit, input, click, assert_text만 사용하세요.
-- value가 없는 assert는 만들지 마세요.
+응답은 설명 없이 **JSON 배열만** 출력하세요.
 
 코드 요약:
+{source_code}
+
+입력 필드 제약 목록:
+{json.dumps(constraints, ensure_ascii=False, indent=2)}
 """
 
-    prompt = prompt_prefix + source_code
+
     raw_scenarios = ask_scenario_llm(prompt)
 
     if isinstance(raw_scenarios, list):
-        normalized = normalize_asserts(raw_scenarios)
+        normalized = normalize_asserts(raw_scenarios, constraints)
         normalized = normalize_radio_inputs(normalized)
         normalized = patch_failed_steps(normalized)
         if failure_log:
             normalized = auto_repair_failed_log(normalized, failure_log)
 
-        # ✅ 실패한 시나리오 자동 저장
         if project_name:
             for s in normalized:
                 if "name" in s and "steps" in s:
@@ -120,5 +164,7 @@ def generate_test_scenarios(path: Path, failure_log: str = None, project_name: s
 
         return {"scenarios": normalized}
     else:
-        return {"error": raw_scenarios.get("error", "LLM 응답 오류"), "raw": raw_scenarios.get("raw_response", "")}
-
+        return {
+            "error": raw_scenarios.get("error", "LLM 응답 오류"),
+            "raw": raw_scenarios.get("raw_response", "")
+        }

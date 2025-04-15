@@ -103,6 +103,7 @@ def analyze_project(request):
 def generate_e2e_scenarios(request):
     project_name = request.data.get("project_name")
     failure_log = request.data.get("failure_log", None)
+    print(failure_log)
 
     if not project_name:
         return Response({"error": "project_name is required"}, status=400)
@@ -112,6 +113,7 @@ def generate_e2e_scenarios(request):
         return Response({"error": "해당 프로젝트가 존재하지 않습니다."}, status=404)
 
     result = generate_test_scenarios(Path(upload_path), failure_log=failure_log, project_name=project_name)
+    print(result)
 
     if "error" in result:
         return Response(result, status=500)

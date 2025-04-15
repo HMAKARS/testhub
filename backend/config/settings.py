@@ -144,8 +144,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=5),  # 액세스 토큰 만료 시간
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),    # 리프레시 토큰 만료 시간
+    'ACCESS_TOKEN_LIFETIME': timedelta(days=7),  # 액세스 토큰 만료 시간
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=14),    # 리프레시 토큰 만료 시간
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
     'UPDATE_LAST_LOGIN': False,

@@ -1,3 +1,5 @@
+import axios from "../utils/axiosInstance";
+
 export default function ApiDashboard() {
     return (
         <div>

@@ -9,18 +9,19 @@ export default function E2EDashboard() {
     const [scenarios, setScenarios] = useState([]);
     const [scenarioResults, setScenarioResults] = useState({});
     const [message, setMessage] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const token = localStorage.getItem("token");
 
+
     const handleRunScenario = async (id) => {
+        setLoading(true);
         try {
             const res = await axios.post(`http://localhost:8000/api/e2e/scenarios/${id}/run/`, {}, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
             const result = res.data;
             setScenarioResults(prev => ({ ...prev, [id]: result }));
-
             if (result.success) {
                 alert(`✅ 실행 완료`);
             } else {
@@ -29,10 +30,13 @@ export default function E2EDashboard() {
         } catch (err) {
             console.error("실행 실패", err);
             alert("❌ 실행 실패");
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleUpdateScenario = async (id, scenario) => {
+        setLoading(true);
         try {
             await axios.patch(`http://localhost:8000/api/e2e/scenarios/${id}/`, {
                 name: scenario.name,
@@ -44,6 +48,8 @@ export default function E2EDashboard() {
         } catch (err) {
             console.error(err);
             setMessage("❌ 시나리오 수정 실패");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -75,6 +81,7 @@ export default function E2EDashboard() {
     };
 
     const handleRegenerateScenario = async (id, failureLog) => {
+        setLoading(true);
         try {
             const res = await axios.post("http://localhost:8000/api/e2e/scenario/generate/", {
                 project_name: projectName,
@@ -82,18 +89,21 @@ export default function E2EDashboard() {
             }, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-
             setScenarios(prev => [...prev, ...res.data.scenarios]);
             setMessage("✅ 보정된 시나리오가 생성되었습니다");
         } catch (err) {
             console.error(err);
             setMessage("❌ 보정 실패");
+        } finally {
+            setLoading(false);
         }
     };
 
+    const getImageUrl = (path) => path ? `http://localhost:8000/${path}` : null;
+
     const handleUpload = async () => {
         if (!file) return alert("파일을 선택하세요");
-
+        setLoading(true);
         const formData = new FormData();
         formData.append("file", file);
 
@@ -107,49 +117,56 @@ export default function E2EDashboard() {
             const project = res.data.projectName;
             setProjectName(project);
             setMessage("✅ 업로드 및 압축 해제 성공");
-
             handleAnalyze(project);
         } catch (err) {
             console.error(err);
             setMessage("❌ 업로드 실패");
+        } finally {
+            setLoading(false);
         }
     };
 
     const handleAnalyze = async (project) => {
+        setLoading(true);
         try {
             const res = await axios.post("http://localhost:8000/api/e2e/analyze/", {
                 project_name: project,
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-
             setAnalyzeResult(res.data);
             setMessage("✅ 프로젝트 분석 완료");
         } catch (err) {
             console.error(err);
             setMessage("❌ 분석 실패");
+        } finally {
+            setLoading(false);
         }
     };
 
     const generateScenario = async () => {
+        setLoading(true);
         try {
             const res = await axios.post("http://localhost:8000/api/e2e/scenario/generate/", {
                 project_name: projectName,
             }, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-
             setScenarios(res.data.scenarios);
             setMessage("✅ 시나리오 자동 생성 완료");
         } catch (err) {
             console.error(err);
             setMessage("❌ 시나리오 생성 실패");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="max-w-4xl mx-auto px-6 py-10 text-sm">
             <h1 className="text-xl font-bold mb-4">🧠 AI 기반 E2E 테스트 대시보드</h1>
+
+            {loading && <p className="text-blue-500 mb-4 animate-pulse">⏳ 로딩 중입니다...</p>}
 
             <input
                 type="file"
@@ -287,11 +304,14 @@ export default function E2EDashboard() {
                                         </pre>
 
                                         {scenarioResults[s.id].screenshot && (
-                                            <img
-                                                src={scenarioResults[s.id].screenshot}
-                                                alt="실패 스크린샷"
-                                                className="mt-2 border rounded max-w-md"
-                                            />
+                                            <a href={getImageUrl(scenarioResults[s.id].screenshot)} target="_blank"
+                                               rel="noopener noreferrer">
+                                                <img
+                                                    src={getImageUrl(scenarioResults[s.id].screenshot)}
+                                                    alt="실패 스크린샷"
+                                                    className="mt-2 border rounded max-w-md hover:shadow-xl hover:scale-105 transition-transform"
+                                                />
+                                            </a>
                                         )}
                                     </div>
                                 )}
